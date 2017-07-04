@@ -70,7 +70,11 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
     $data = file_get_contents($xurl);
     $raw  = (array) json_decode($data);
     foreach ($raw['coubs'] as $c) {
-        $rows[$c->id] = $c->file_versions->html5->audio->high->url;
+        if ($c && $c->file_versions && $c->file_versions->html5 && $c->file_versions->html5->audio) {
+            $rows[$c->id] = $c->file_versions->html5->audio->high->url;
+        } else {
+            echo 'No audio for ' . json_encode($c) . "\n";
+        }
     }
 
     foreach ($rows as $rid => $rurl) {
@@ -82,7 +86,7 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
         if (!is_readable($file)) {
             $data = file_get_contents($rurl);
             file_put_contents($file, $data);
-            echo "Saved " . $file . "\n";
+            echo "Saved " . $file . " from " . $file . "\n";
         } else {
             echo "Skipping " . $file . "\n";
         }
