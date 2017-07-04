@@ -70,7 +70,7 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
     $data = file_get_contents($xurl);
     $raw  = (array) json_decode($data);
     foreach ($raw['coubs'] as $c) {
-        if ($c && $c->file_versions && $c->file_versions->html5 && $c->file_versions->html5->audio) {
+        if ($c && !empty($c->file_versions) && !empty($c->file_versions->html5) && !empty($c->file_versions->html5->audio)) {
             $rows[$c->id] = $c->file_versions->html5->audio->high->url;
         } else {
             echo 'No audio for ' . json_encode($c) . "\n";
