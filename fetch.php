@@ -45,16 +45,13 @@ if (function_exists('pcntl_signal')) {
 }
 
 if (empty($argv[1]) || empty($argv[2])) {
-    echo 'This script downloads video & music files into folder per each coub you have on channel' . "\n";
-    echo 'Usage ' . __FILE__ . ' $CHANNEL_ID $ACCESS_TOKEN' . "\n";
-    echo '$CHANNEL_ID is numeric channel ID or persistent string identifier' . "\n";
-    echo '$ACCESS_TOKEN is authorization_code received from coub.com/oauth/token API' . "\n";
+    echo 'Usage ' . __FILE__ . ' $CHANNEL_ID $ACCESS_TOKEN';
     exit;
 }
 
 
-$channelId   = 'thespike';
-$accessToken = '';
+$channelId   = $argv[1];
+$accessToken = $argv[2];
 
 $url = 'http://coub.com/api/v2/timeline/channel/' .
         $channelId .
@@ -75,6 +72,7 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
     
     foreach ($raw['coubs'] as $c) {
         if ($c && !empty($c->file_versions) && !empty($c->file_versions->html5) && !empty($c->file_versions->html5->audio)) {
+            $c->id = $c->recoub_to->permalink;
             $rows[$c->id] = $c->file_versions->html5->audio->high->url;
             if ($v = $c->file_versions->html5->video) {
 	         $vlink = $v->high->url ?? $v->med->url;
