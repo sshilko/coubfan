@@ -45,19 +45,21 @@ if (function_exists('pcntl_signal')) {
 }
 
 if (empty($argv[1]) || empty($argv[2])) {
-    echo 'Usage ' . __FILE__ . ' $CHANNEL_ID $ACCESS_TOKEN';
+    echo 'This script downloads video & music files into folder per each coub you have on channel' . "\n";
+    echo 'Usage ' . __FILE__ . ' $CHANNEL_ID $ACCESS_TOKEN' . "\n";
+    echo '$CHANNEL_ID is numeric channel ID or persistent string identifier' . "\n";
+    echo '$ACCESS_TOKEN is authorization_code received from coub.com/oauth/token API' . "\n";
     exit;
 }
 
 
-$channelId   = $argv[1];
-$accessToken = $argv[2];
+$channelId   = 'thespike';
+$accessToken = '';
 
 $url = 'http://coub.com/api/v2/timeline/channel/' .
         $channelId .
         '?access_token=' . $accessToken .
         '&page=#PAGE&per_page=25';
-
 for ($i=1; $i < PHP_INT_MAX; $i++) {
     if ($requestExit) {
         echo 'Finishing after processing ' . $i . ' pages' . "\n";
@@ -65,13 +67,21 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
     }
 
     $rows = [];
+    $vids = [];
     $xurl  = str_replace('#PAGE', $i, $url);
 
     $data = file_get_contents($xurl);
     $raw  = (array) json_decode($data);
+    
     foreach ($raw['coubs'] as $c) {
         if ($c && !empty($c->file_versions) && !empty($c->file_versions->html5) && !empty($c->file_versions->html5->audio)) {
             $rows[$c->id] = $c->file_versions->html5->audio->high->url;
+            if ($v = $c->file_versions->html5->video) {
+	         $vlink = $v->high->url ?? $v->med->url;
+                 if ($vlink) {
+                     $vids[$c->id] = $vlink;
+                 }
+            }
         } else {
             echo 'No audio for ' . json_encode($c) . "\n";
         }
@@ -82,14 +92,27 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
             break;
         }
 
-        $file = getcwd() . '/' . $rid . '.mp3';
+        $file = getcwd() . '/downloads/' . $rid . '/';
+        if (!is_dir($file)) {
+            mkdir($file);
+        }
+        $file .= 'audio.mp3';
         if (!is_readable($file)) {
             $data = file_get_contents($rurl);
             file_put_contents($file, $data);
-            echo "Saved " . $file . " from " . $file . "\n";
+            echo "Saved " . $file . " from " . basename($rurl) . "\n";
+
+            $file = getcwd() . '/downloads/' . $rid . '/video.mp4';
+            if (!is_readable($file) && isset($vids[$rid])) {
+                $data = file_get_contents($vids[$rid]);
+                file_put_contents($file, $data);
+                echo "Saved " . $file . ' from ' . basename($vids[$rid]) . "\n";
+            }
         } else {
             echo "Skipping " . $file . "\n";
         }
+
+        
 
         if ($delaySignal) {
             pcntl_signal_dispatch();
