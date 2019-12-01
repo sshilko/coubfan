@@ -76,10 +76,10 @@ for ($i=1; $i < PHP_INT_MAX; $i++) {
             $title = uniqid('coub-');
         }
         if ($c && !empty($c->file_versions) && !empty($c->file_versions->share) && !empty($c->file_versions->share->default)) {
-            $c->id = $c->recoub_to->permalink;
+		$c->id = $c->recoub_to->permalink;
             $rows[$c->id . '_' . str_replace(' ', '_', strtolower($title))] = $c->file_versions->share->default;
         } else {
-            echo 'No share for coub.com/view/' . $c->id . "\n";
+            echo 'No share for coub.com/view/' . $c->permalink . " (" . $c->title . ")\n";
         }
     }
 
